@@ -15,4 +15,3 @@ class Item(ItemBase):
 
     class Config:
         from_attributes = True
-       

@@ -25,8 +25,8 @@ COPY ./app ./app
 
 # 创建一个非 root 用户，并将其 UID/GID 与宿主机显式对齐
 # 这样容器内的 appuser 读写挂载目录时，宿主机就会认为是合法的本地用户在操作
-RUN groupadd -g ${GROUP_ID} appgroup && \
-    useradd -m -u ${USER_ID} -g appgroup appuser && \
+RUN groupadd -g ${GROUP_ID} appgroup &&  \
+    useradd -m -u ${USER_ID} -g appgroup appuser &&  \
     chown -R appuser:appgroup /workspace
 
 # 切换到非 root 安全用户

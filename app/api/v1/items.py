@@ -2,7 +2,7 @@ from datetime import datetime
 
 from fastapi import APIRouter
 
-from app.schema.response import success, ResponseModel
+from app.schemas.responses import success, ResponseModel
 
 router = APIRouter(prefix="/items", tags=["item"])
 
