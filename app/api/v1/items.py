@@ -4,7 +4,7 @@ from fastapi import APIRouter
 
 from app.schemas.responses import success, ResponseModel
 
-router = APIRouter(prefix="/items", tags=["item"])
+router = APIRouter(prefix="/items", tags=["items"])
 
 
 @router.get(path="/list", response_model=ResponseModel)
