@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    # 使用 ${变量名:-默认值} 的语法，这样既支持脚本注入，也支持直接运行 docker-compose
+    image: ${APP_IMAGE_NAME:-fast_api_app}:${APP_VERSION:-latest}
+    container_name: ${APP_CONTAINER_NAME:-fast_api_app}
+    ports:
+      - "8000:8000"
+    volumes:
+      # 将宿主机的时区和本地时间挂载进容器
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./app:/workspace/app
+    environment:
+      - TZ=Asia/Shanghai
+      - ENV=production
+    restart: always
