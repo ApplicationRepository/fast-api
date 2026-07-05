@@ -615,3 +615,6 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# 排除 Mac 特有的系统缓存和元数据文件夹
+.DS_Store
+__MACOSX/
