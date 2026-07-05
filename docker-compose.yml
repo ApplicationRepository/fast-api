@@ -1,17 +1,23 @@
 services:
   web:
-    build: .
-    # 使用 ${变量名:-默认值} 的语法，这样既支持脚本注入，也支持直接运行 docker-compose
+    build:
+      context: .
+      dockerfile: Dockerfile
+      #核心：自动获取当前运行脚本的 Linux 用户的 UID 和 GID 传给 Docker
+      args:
+        - USER_ID=${UID:-1000}
+        - GROUP_ID=${GID:-1000}
+    # 动态引用 .env 中的镜像名称和版本号
     image: ${APP_IMAGE_NAME:-fast_api_app}:${APP_VERSION:-latest}
+    # 动态引用 .env 中的容器名称
     container_name: ${APP_CONTAINER_NAME:-fast_api_app}
     ports:
       - "8000:8000"
     volumes:
-      # 将宿主机的时区和本地时间挂载进容器
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - ./app:/workspace/app
     environment:
-      - TZ=Asia/Shanghai
       - ENV=production
+      - TZ=Asia/Shanghai
     restart: always
