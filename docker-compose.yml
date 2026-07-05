@@ -11,6 +11,7 @@ services:
     image: ${APP_IMAGE_NAME:-fast_api_app}:${APP_VERSION:-latest}
     # 动态引用 .env 中的容器名称
     container_name: ${APP_CONTAINER_NAME:-fast_api_app}
+    restart: always
     ports:
       - "8000:8000"
     volumes:
@@ -20,4 +21,3 @@ services:
     environment:
       - ENV=production
       - TZ=Asia/Shanghai
-    restart: always
