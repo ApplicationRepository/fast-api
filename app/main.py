@@ -2,8 +2,10 @@ from fastapi import FastAPI
 
 from app.api.v1 import item
 from app.core.config import settings
+from app.core.exception import register_exception_handlers
 
 app = FastAPI(title=settings.PROJECT_NAME)
+register_exception_handlers(app=app)
 
 # 包含路由
 app.include_router(router=item.router, prefix=settings.API_V1_STR, tags=["item"])
