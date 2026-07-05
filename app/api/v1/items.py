@@ -9,7 +9,7 @@ router = APIRouter(prefix="/items", tags=["items"])
 
 
 @router.get(path="/list", response_model=ResponseModel)
-def item_list():
+async def item_list():
     data = [
         {
             "id": 1,
@@ -26,7 +26,7 @@ def item_list():
 
 
 @router.get(path="/current-time", response_model=ResponseModel)
-def current_time():
+async def current_time():
     local_time = datetime.now()
     return success(data={
         "now": local_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -39,7 +39,7 @@ class ItemCreate(BaseModel):
 
 
 @router.post(path="/", response_model=ResponseModel)
-def create_item(item: ItemCreate):
+async def create_item(item: ItemCreate):
     # 4. 组装成包含 ID 的完整字典（准备返回给前端）
     inserted_data = {
         "id": 3,
