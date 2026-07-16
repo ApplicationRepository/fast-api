@@ -13,35 +13,59 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${YELLOW}[1/3] 正在拉取最新的 Git 代码并清理缓存...${NC}"
-# 生产环境标准动作：清理缓存
+echo -e "${YELLOW}[1/3] 正在清理 Python 缓存...${NC}"
 find . -type d -name "__pycache__" -exec rm -r {} + 2>/dev/null
 
-export APP_VERSION="${APP_VERSION}"
-export APP_IMAGE_NAME="${APP_IMAGE_NAME}"
-export APP_CONTAINER_NAME="${APP_CONTAINER_NAME}"
+# --- 💡 核心优化：检测 root 并安全降级，规避 GID 0 冲突 ---
+DETECTED_UID=$(id -u)
+DETECTED_GID=$(id -g)
+
+if [ "${DETECTED_UID}" -eq 0 ]; then
+    # 如果宿主机是 root，将容器内用户降级为标准的 1000 组
+    export CURRENT_UID=1000
+    export CURRENT_GID=1000
+    echo -e "${YELLOW}-> 检测到宿主机为 root 用户，已安全降级容器内权限至 UID=1000, GID=1000${NC}"
+else
+    export CURRENT_UID=${DETECTED_UID}
+    export CURRENT_GID=${DETECTED_GID}
+    echo -e "${GREEN}-> 已绑定宿主机权限: UID=${CURRENT_UID}, GID=${CURRENT_GID}${NC}"
+fi
 
 echo -e "${YELLOW}[2/3] 正在后台构建新镜像并平滑替换容器...${NC}"
-# 💡 生产环境核心命令：
-# --build: 强制 Docker 深度扫描 app/ 目录，发现代码变动立刻构建新镜像
-# -d: 后台运行
-# 机制：Docker 会先在后台默默构建新镜像，等新镜像完全构建好了，
-# 它才会“闪击”停掉旧容器、瞬间启动新容器。服务中断时间通常小于 0.5 秒。
 docker compose up -d --build
 
-# 3. 验证新版本是否正常启动
-echo -e "${YELLOW}[3/3] 正在验证新版本状态...${NC}"
-sleep 3
-IS_RUNNING=$(docker inspect -f '{{.State.Running}}' "${APP_CONTAINER_NAME}" 2>/dev/null)
+# 💡 核心新增：检查 docker compose 命令是否成功执行
+if [ $? -ne 0 ]; then
+    echo -e "${RED}[ERROR] Docker 镜像构建或容器启动失败！终止后续验证。${NC}"
+    exit 1
+fi
 
-if [ "${IS_RUNNING}" == "true" ]; then
+# --- 3. 验证新版本是否正常启动 ---
+echo -e "${YELLOW}[3/3] 正在验证前端与后端服务状态...${NC}"
+sleep 3
+
+# 对齐真实的容器名称
+REAL_BACKEND_CONTAINER="${APP_BACKEND_CONTAINER_NAME}-${APP_BACKEND_CONTAINER_VERSION}"
+REAL_FRONTEND_CONTAINER="${APP_FRONTEND_CONTAINER_NAME}-${APP_FRONTEND_CONTAINER_VERSION}"
+
+BACKEND_RUNNING=$(docker inspect -f '{{.State.Running}}' "${REAL_BACKEND_CONTAINER}" 2>/dev/null)
+FRONTEND_RUNNING=$(docker inspect -f '{{.State.Running}}' "${REAL_FRONTEND_CONTAINER}" 2>/dev/null)
+
+if [ "${BACKEND_RUNNING}" == "true" ] && [ "${FRONTEND_RUNNING}" == "true" ]; then
     echo -e "${GREEN}==================================================${NC}"
-    echo -e "${GREEN} 生产环境代码更新成功! FastAPI 服务已平滑切换到最新版本。${NC}"
-    echo -e "${GREEN} 当前运行版本: ${APP_VERSION}${NC}"
+    echo -e "${GREEN}  生产环境代码更新成功! 前后端服务已平滑切换。${NC}"
+    echo -e "${GREEN}  后端容器 [${REAL_BACKEND_CONTAINER}] 已启动。${NC}"
+    echo -e "${GREEN}  前端容器 [${REAL_FRONTEND_CONTAINER}] 已启动。${NC}"
     echo -e "${GREEN}==================================================${NC}"
 else
-    echo -e "${RED}[ERROR] 新版本容器未能启动！正在自动回滚...${NC}"
-    # 如果失败，可以在这里写回滚逻辑，或者提示查看日志
-    docker compose logs web
+    echo -e "${RED}[ERROR] 服务未能完全启动！${NC}"
+    if [ "${BACKEND_RUNNING}" != "true" ]; then
+        echo -e "${RED}[- 异常 -] 后端容器 [${REAL_BACKEND_CONTAINER}] 未启动，正在打印最近日志...${NC}"
+        docker compose logs backend | tail -n 20
+    fi
+    if [ "${FRONTEND_RUNNING}" != "true" ]; then
+        echo -e "${RED}[- 异常 -] 前端容器 [${REAL_FRONTEND_CONTAINER}] 未启动，正在打印最近日志...${NC}"
+        docker compose logs frontend | tail -n 20
+    fi
     exit 1
 fi
