@@ -34,15 +34,15 @@ git clean -fd
 echo -e "${GREEN}[SUCCESS] Git 代码强制更新完成！${NC}"
 
 
-# --- 2. 检查并调度执行 deploy.sh ---
-echo -e "\n${YELLOW}[步骤 3/3] 正在触发部署脚本 deploy.sh...${NC}"
+# --- 2. 检查并调度执行 start.sh ---
+echo -e "\n${YELLOW}[步骤 3/3] 正在触发部署脚本 start.sh...${NC}"
 
-if [ -f "./deploy.sh" ]; then
-    # 确保 deploy.sh 拥有可执行权限
-    chmod +x ./deploy.sh
+if [ -f "./start.sh" ]; then
+    # 确保 start.sh 拥有可执行权限
+    chmod +x ./start.sh
 
     # ➡️ 核心：直接调用并执行部署脚本
-    ./deploy.sh
+    ./start.sh
 
     # 检查部署脚本的最终退出状态
     if [ $? -eq 0 ]; then
@@ -50,10 +50,10 @@ if [ -f "./deploy.sh" ]; then
         echo -e "${GREEN} 🎉 恭喜！全套自动化更新与部署流程顺利圆满完成！${NC}"
         echo -e "${GREEN}==================================================${NC}"
     else
-        echo -e "\n${RED}[ERROR] 部署脚本 deploy.sh 在执行过程中出错，请检查容器日志。${NC}"
+        echo -e "\n${RED}[ERROR] 部署脚本 start.sh 在执行过程中出错，请检查容器日志。${NC}"
         exit 1
     fi
 else
-    echo -e "${RED}[ERROR] 未在当前目录下找到部署脚本 deploy.sh！${NC}"
+    echo -e "${RED}[ERROR] 未在当前目录下找到部署脚本 start.sh！${NC}"
     exit 1
 fi
