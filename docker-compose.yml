@@ -30,7 +30,7 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./file:/workspace/file
-      - ./dist:/usr/share/nginx/html
+      - ./dist:/workspace/dist
     depends_on:
       - backend
     networks:
