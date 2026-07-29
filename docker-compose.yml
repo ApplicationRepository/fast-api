@@ -4,7 +4,6 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        # 💡 修改：使用更安全的变量名，规避只读限制
         - USER_ID=${CURRENT_UID:-1000}
         - GROUP_ID=${CURRENT_GID:-1000}
     restart: unless-stopped
@@ -19,8 +18,7 @@ services:
     extra_hosts:
       - "aa.bb.cc:1.2.3.4"
     networks:
-      - fast_api_backend_network
-
+      - backend_network
   frontend:
     image: nginx:alpine
     container_name: ${APP_FRONTEND_CONTAINER_NAME}-${APP_FRONTEND_CONTAINER_VERSION}
@@ -34,13 +32,12 @@ services:
     depends_on:
       - backend
     networks:
-      - fast_api_frontend_network
-      - fast_api_backend_network
-
+      - frontend_network
+      - backend_network
 networks:
-  fast_api_backend_network:
+  backend_network:
     name: fast_api_backend_network
     driver: bridge
-  fast_api_frontend_network:
+  frontend_network:
     name: fast_api_frontend_network
     driver: bridge
